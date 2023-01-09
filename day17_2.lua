@@ -5,7 +5,7 @@ rocks[3] = { name = "Rev. L", width = 3, height = 3, units = { { 0, 0 }, { 1, 0 
 rocks[4] = { name = "Vert. bar", width = 1, height = 4, units = { { 0, 0 }, { 0, 1 }, { 0, 2 }, { 0, 3 } } } -- vertical bar
 rocks[5] = { name = "Square", width = 2, height = 2, units = { { 0, 0 }, { 0, 1 }, { 1, 0 }, { 1, 1 } } } -- square
 
-local file = assert(io.open("./data/test_17.txt", "r"))
+local file = assert(io.open("./data/input_17.txt", "r"))
 local line = file:read("*line")
 file:close()
 
@@ -15,6 +15,7 @@ for i = 1, #line do
 end
 
 local chamber = { maxHeight = 0 }
+local maxHeigthsSequence = {}
 
 local function getNextRock()
     local i = -1
@@ -103,7 +104,7 @@ local function makeRockFall(rock)
             chamber[rock.origin.y + u[2]][rock.origin.x + u[1]] = true
             if rock.origin.y + u[2] > chamber.maxHeight then chamber.maxHeight = rock.origin.y + u[2] end
         end
-        --io.write((chamber.maxHeight - previousMaxHeight) .. ",")
+        maxHeigthsSequence[#maxHeigthsSequence + 1] = chamber.maxHeight - previousMaxHeight
         return true
     end
 end
@@ -125,6 +126,43 @@ local function printChamber(rock)
         print("|" .. l .. "|")
     end
     print("+-------+")
+end
+
+
+local function longestRepeatedSubstring(str)
+    local n = #str
+    local LCSRe = {}
+    for i = 1, n + 1 do
+        LCSRe[i] = {}
+    end
+
+    local res = ""
+    local res_length = 0
+
+    local index = 0
+    for i = 1, n do
+        for j = i + 1, n do
+            if (str:sub(i - 1, i - 1) == str:sub(j - 1, j - 1)
+                and LCSRe[i - 1][j - 1] < (j - i)) then
+                LCSRe[i][j] = LCSRe[i - 1][j - 1] + 1;
+
+                if (LCSRe[i][j] > res_length) then
+                    res_length = LCSRe[i][j];
+                    index = math.max(i, index);
+                end
+            else
+                LCSRe[i][j] = 0;
+            end
+        end
+    end
+
+    if (res_length > 0) then
+        for i = index - res_length + 1, index do
+            res = res .. str:sub(i - 1, i - 1)
+        end
+    end
+
+    return res;
 end
 
 local function main(nbRocks)
@@ -150,38 +188,50 @@ local function main(nbRocks)
     end
 end
 
-main(100)
+local nbRocksTotal = 1000000000000
+main(3442)
 
--- print("The tower of rocks is " .. chamber.maxHeight .. " units tall")
+local output = table.concat(maxHeigthsSequence)
+print(output)
+local longestSequence = longestRepeatedSubstring(output)
+local longestSequenceHeight = 0
+for i = 1, #longestSequence do
+    longestSequenceHeight = longestSequenceHeight + tonumber(longestSequence:sub(i, i))
+end
+print(longestSequence)
+print("Cumulate height is", longestSequenceHeight)
+local firstOccurenceIndex = output:find(longestSequence)
 
-local sequence = { 1, 3, 2, 1, 2, 1, 3, 2, 2, 0, 1, 3, 2, 0, 2, 1, 3, 3, 4, 0, 1, 2, 3, 0, 1, 1, 3, 2, 2, 0, 0, 2, 3, 4,
-    0, 1, 2, 1, 2, 0, 1, 2, 1, 2, 0, 1, 3, 2, 0, 0, 1, 3, 3, 4, 0, 1, 2, 3, 0, 1, 1, 3, 2, 2, 0, 0, 2, 3, 4, 0, 1, 2, 1,
-    2, 0, 1, 2, 1, 2, 0, 1, 3, 2, 0, 0, 1, 3, 3, 4, 0, 1, 2, 3, 0, 1, 1, 3, 2, 2, 0 }
+local prefixHeight = 0
+for i = 1, firstOccurenceIndex-1 do
+    prefixHeight = prefixHeight + tonumber(output:sub(i, i))
+end
+print("First occurence at:", firstOccurenceIndex, "Height before sequence start:", prefixHeight)
 
-    --sequence = {"a","c","b","d","f","c","b","d","f","c","b"}
-local dict = {}
 
---Checks for the largest common prefix
-local function lcp(s, t)
-    local n = math.min(#s, #t)
-    for i = 1, n do
-        if s[i] ~= t[i] then
-            return { table.unpack(s, 1, i) }
-        end
-    end
-    return { table.unpack(s, 1, n) }
+
+local suffixLength = (nbRocksTotal - firstOccurenceIndex) % #longestSequence
+local suffixHeight = 0
+for i = 1, suffixLength do
+    suffixHeight = suffixHeight + tonumber(longestSequence:sub(i, i))
 end
 
-local lrs = {}
-local n = #sequence
-for i = 1, n do
-    for j = i + 1, n do
-        local x = lcp({ table.unpack(sequence, i, n) }, { table.unpack(sequence, j, n) })
-        if #x > #lrs then
-            print(table.concat(x), i, j)
-            if #x + i > j then return end
-            lrs = x
-        end
-    end
+local nbOccurencesSubsequence = math.floor((nbRocksTotal - firstOccurenceIndex + 1) / #longestSequence)
+print("Length of subsequence:", #longestSequence,
+    "Prefix height is " .. prefixHeight,
+    "Height of subsequence is:" .. longestSequenceHeight,
+    "Subsequence present " .. nbOccurencesSubsequence .. " times",
+    "Rest " .. suffixLength .. " rocks, for an height of " .. suffixHeight
+)
+
+local mesuredHeight = 0
+for i = 1, #output do
+    mesuredHeight = mesuredHeight + tonumber(output:sub(i, i))
 end
-print("Longest repeating sequence: ", table.concat(lrs, ""));
+print("Total mesured height is ", mesuredHeight)
+print("Total calculated height is", prefixHeight + longestSequenceHeight*nbOccurencesSubsequence + suffixHeight)
+
+
+-- 1526744186040 pas ça
+-- The principle is good, but the fonction returning the longest repeating subsequence is not ok
+-- I've found the answer by getting a repeating sequence manually and calculating the result
