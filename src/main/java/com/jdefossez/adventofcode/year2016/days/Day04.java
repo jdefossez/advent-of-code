@@ -39,10 +39,28 @@ public class Day04 {
     }
 
     public static int part2(List<Room> triangles) {
-        return 0;
+        return triangles.stream()
+                        .filter(r -> rotate(r.name(), r.id()).contains("northpole object storage"))
+                        .map(Room::id)
+                        .findFirst()
+                        .orElseThrow();
     }
 
-    private record Room(String name, int id, String checksum) {
+    private static String rotate(String s, int offset) {
+        return s.chars()
+                .mapToObj(c -> rotate(c, offset))
+                .map(Object::toString)
+                .collect(Collectors.joining()) + " " + offset;
+    }
+
+    private static char rotate(int c, int offset) {
+        if (c == '-') {
+            return ' ';
+        }
+        return (char) (97 + ((c - 97) + offset) % 26);
+    }
+
+    public record Room(String name, int id, String checksum) {
 
         boolean isValid() {
 

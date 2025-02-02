@@ -1,4 +1,4 @@
-package com.jdefossez.adventofcode.year2015.days;
+package com.jdefossez.adventofcode.utils;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

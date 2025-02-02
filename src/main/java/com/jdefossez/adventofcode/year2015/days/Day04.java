@@ -1,5 +1,7 @@
 package com.jdefossez.adventofcode.year2015.days;
 
+import com.jdefossez.adventofcode.utils.MD5;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
