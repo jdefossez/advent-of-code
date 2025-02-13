@@ -30,9 +30,6 @@ public class Day03 {
 
         int diff = Math.min(Math.abs(input - c1), Math.min(Math.abs(input - c2), Math.min(Math.abs(input - c3), Math.abs(input - c4))));
 
-        System.out.printf("squareRoot: %d, layerIndex: %d, maxPathLength: %d, sideLength: %d, c1: %d, c2: %d, c3: %d, c4: %d, diff: %d\n",
-                squareRoot, layerIndex, minPathLength, sideLength, c1, c2, c3, c4, diff);
-
         return minPathLength + diff;
     }
 
@@ -45,30 +42,64 @@ public class Day03 {
         grid.put(0, new HashMap<>());
         grid.get(0).put(0, 1);
 
-        var o = IntStream.iterate(2, i -> i + 1).mapToObj(i -> {
-                             int squareRoot = immediateFirstGreaterSquare(i);
-                             int layerIndex = 1 + squareRoot / 2;
-                             int sideLength = layerIndex * 2 - 1;
+        int nextValue = 0;
+        int layerIndex = 2;
+        while (layerIndex < 1000) {
 
-                             int c1 = (squareRoot * squareRoot) - (sideLength - 1) / 2; // S
-                             int c2 = c1 - 2 * ((sideLength - 1) / 2); // W
-                             int c3 = c2 - 2 * ((sideLength - 1) / 2); // N
-                             int c4 = c3 - 2 * ((sideLength - 1) / 2); // E
+            int x = layerIndex - 1;
+            for (int yv = -layerIndex + 2; yv <= layerIndex - 2; yv++) {
+                grid.putIfAbsent(yv, new HashMap<>());
+                nextValue = getSumNeighbors(grid, yv, x);
+                if (nextValue > input) {
+                    return nextValue;
+                }
+                grid.get(yv).put(x, nextValue);
+            }
 
-                             int x = 0;
-                             if (Math.abs(c4 - i) <= (sideLength - 1) / 2) {
-                                 x = layerIndex - 1;
-                             } else if (Math.abs(c2 - i) <= (sideLength - 1) / 2) {
-                                 x = 1 - layerIndex;
-                             }
+            int y = layerIndex - 1;
+            for (int xv = layerIndex - 1; xv >= -layerIndex + 2; xv--) {
+                grid.putIfAbsent(y, new HashMap<>());
+                nextValue = getSumNeighbors(grid, y, xv);
+                if (nextValue > input) {
+                    return nextValue;
+                }
+                grid.get(y).put(xv, nextValue);
+            }
 
-                             System.out.printf("i: %d ==> squareRoot: %d, layerIndex: %d, sideLength: %d, x: %d\n", i, squareRoot, layerIndex, sideLength, x);
-                             return new int[]{0, 0};
-                         })
-                         .limit(20)
-                         .toList();
-        ;
+            x = -layerIndex + 1;
+            for (int yv = layerIndex - 1; yv >= -layerIndex + 2; yv--) {
+                grid.putIfAbsent(yv, new HashMap<>());
+                nextValue = getSumNeighbors(grid, yv, x);
+                if (nextValue > input) {
+                    return nextValue;
+                }
+                grid.get(yv).put(x, nextValue);
+            }
+
+            y = -layerIndex + 1;
+            for (int xv = -layerIndex + 1; xv <= layerIndex - 1; xv++) {
+                grid.putIfAbsent(y, new HashMap<>());
+                nextValue = getSumNeighbors(grid, y, xv);
+                if (nextValue > input) {
+                    return nextValue;
+                }
+                grid.get(y).put(xv, nextValue);
+            }
+
+            layerIndex++;
+        }
         return 0;
+    }
+
+    private static int getSumNeighbors(Map<Integer, Map<Integer, Integer>> grid, int y, int x) {
+        return grid.getOrDefault(y - 1, new HashMap<Integer, Integer>()).getOrDefault(x - 1, 0)
+                + grid.getOrDefault(y - 1, new HashMap<Integer, Integer>()).getOrDefault(x, 0)
+                + grid.getOrDefault(y - 1, new HashMap<Integer, Integer>()).getOrDefault(x + 1, 0)
+                + grid.getOrDefault(y, new HashMap<Integer, Integer>()).getOrDefault(x - 1, 0)
+                + grid.getOrDefault(y, new HashMap<Integer, Integer>()).getOrDefault(x + 1, 0)
+                + grid.getOrDefault(y + 1, new HashMap<Integer, Integer>()).getOrDefault(x - 1, 0)
+                + grid.getOrDefault(y + 1, new HashMap<Integer, Integer>()).getOrDefault(x, 0)
+                + grid.getOrDefault(y + 1, new HashMap<Integer, Integer>()).getOrDefault(x + 1, 0);
     }
 
 }
